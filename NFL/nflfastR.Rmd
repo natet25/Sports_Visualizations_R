@@ -1,0 +1,50 @@
+---
+title: "NFL"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(ggrepel)
+library(ggimage)
+library(nflfastR)
+data <- readRDS(url('https://raw.githubusercontent.com/guga31bb/nflfastR-data/master/data/play_by_play_2020.rds'))
+names(data)
+data <- data %>%
+  left_join(teams_colors_logos, by = c('posteam' = 'team_abbr'))
+```
+```{r}
+names(data)
+```
+
+
+```{r Bears Draft}
+pass <- data %>%
+  filter(pass == 1, !is.na(epa), !is.na(success)) %>%
+  group_by(posteam) %>%
+  summarize(epa = mean(epa), num_pass_plays = n(), success_rate = sum(success) / num_pass_plays) %>% left_join(teams_colors_logos, by = c('posteam' = 'team_abbr'))
+
+pass %>%
+ ggplot(aes(x=epa, y=success_rate)) +
+ geom_image(image = pass$team_logo_espn, asp = 16 / 9) +
+ geom_hline(yintercept = mean(pass$success_rate), color = "red", linetype = "dashed", alpha=0.5) +
+ geom_vline(xintercept =  mean(pass$epa), color = "red", linetype = "dashed", alpha=0.5) +
+ geom_text(aes(.275,mean(pass$success_rate),label = paste("AVG Success Rate: ", round(mean(pass$success_rate), 3)), vjust = -1)) +
+ geom_text(aes(mean(pass$epa),.535,label = paste("AVG EPA on Pass Plays: ", round(mean(pass$epa), 3)), vjust = -1)) +
+ labs(x = "Mean EPA on Pass Plays",
+       y = "% of Pass Plays with Positive EPA",
+       title = "NFL Pass Play EPA 2020",
+       caption = "Data: @nflfastR | Graph by: Nate Tran | @domiNATEstats") +
+  theme_bw() +
+  #center title
+  theme(
+    aspect.ratio = 9 / 16,
+    plot.title = element_text(size = 14, hjust = 0.5, face = "bold")
+  ) +
+  #make ticks look nice
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  ggsave('passingepa.png')
+
+```
+

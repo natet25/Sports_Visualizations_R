@@ -1,0 +1,72 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(ggrepel)
+library(teamcolors)
+mlb <- read.csv(file = 'FanGraphs Leaderboard.csv')
+mayrelief <- read.csv(file = 'RelieversMay.csv')
+mayrelief <- mayrelief %>%
+  mutate(KminusBBPct = parse_number(KminusBBPct))
+mlb <- mlb %>%
+  filter(!is.na(BB.), !is.na(K.)) %>%
+  mutate(BBRate = parse_number(BB.), KRate = parse_number(K.))
+```
+
+```{r KRate and BBRate}
+mlb %>%
+  ggplot(aes(x = BBRate, y = KRate)) +
+  geom_point(aes(color = PA)) +
+  geom_text_repel(aes(label = Name), max.overlaps = 5) +
+  geom_hline(yintercept = mean(mlb$KRate), color = "red", linetype = "dashed", alpha=0.5) +
+  geom_vline(xintercept =  mean(mlb$BBRate), color = "red", linetype = "dashed", alpha=0.5) +
+  geom_text(aes(x = 19, y = 7.5, label = "High Walks, Low Ks")) +
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10))
+  
+```
+
+```{r FIP/BABIP}
+mayrelief %>%
+  ggplot(aes(x = FIP, y = BABIP)) +
+  geom_point(aes(size = WHIP, color = Team)) +
+  scale_color_manual(values = c("#A71930", "#CE1141", "#DF4601", "#BD3039", "#0E3386", "#000000", "#C6011F", "#E31937", "#333366", "#0C2C56", "#EB6E1F", "#004687", "#BA0021", "#005A9C", "#FF6600", "#0A2351", "#002B5C", "#FF5910", "#E4002B", "#003831", "#284898", "#FDB827", "#002D62", "#0C2C56", "#FD5A1E", "#C41E3A", "#092C5C", "#C0111F", "#134A8E", "#AB0003"), guide = FALSE) +
+  geom_text_repel(aes(label = Team), max.overlaps = 10) +
+  geom_hline(yintercept = mean(mayrelief$BABIP), color = "red", linetype = "dashed", alpha=0.5) +
+  geom_vline(xintercept =  mean(mayrelief$FIP), color = "red", linetype = "dashed", alpha=0.5) +
+  labs(x = "Fielding Independent Pitching",
+       y = "Batting Average on Balls in Play",
+       title = "MLB Relief Pitching since May 1st, 2021",
+       caption = "Data: @fangraphs | Graph By: Nate Tran | @domiNATEstats") +
+  #uses the black and white ggplot theme
+  theme_bw() +
+  #center title with hjust = 0.5
+  theme(
+    plot.title = element_text(size = 14, hjust = 0.5, face = "bold")
+  ) +
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  ggsave("maybabipfip.png")
+```
+
+```{r K vs BB May}
+mayrelief %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = Team, y = KminusBBPct, fill = Team), stat = "identity", show.legend = FALSE) +
+     scale_fill_manual(values = c("#A71930", "#CE1141", "#DF4601", "#BD3039", "#0E3386", "#000000", "#C6011F", "#E31937", "#333366", "#0C2C56", "#EB6E1F", "#004687", "#BA0021", "#005A9C", "#FF6600", "#0A2351", "#002B5C", "#FF5910", "#E4002B", "#003831", "#284898", "#FDB827", "#002D62", "#0C2C56", "#FD5A1E", "#C41E3A", "#092C5C", "#C0111F", "#134A8E", "#AB0003"), guide = FALSE) +
+  geom_hline(yintercept = mean(mayrelief$KminusBBPct), color = "red", linetype = "dashed") +
+    scale_x_discrete(guide = guide_axis(n.dodge=2)) +
+    labs(x = "Team",
+         y = "Strikeout % - Walk %",
+         title = "Reliever Ks vs BBs since May 1st, 2021",
+         caption = "Data: @fangraphs | Graph by: Nate Tran | @domiNATEstats") +
+    theme_bw() +
+    theme(
+      plot.title = element_text(size = 14, hjust = 0.5, face = "bold")
+    ) +
+  ggsave("maykminusbb.png")
+```
+

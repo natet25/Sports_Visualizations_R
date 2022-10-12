@@ -1,0 +1,91 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r Load Data}
+library(tidyverse)
+library(ggrepel)
+library(readxl)
+saves <- read_excel('NCAAMLaxSaves.xlsx')
+tourney <- read_excel('MLaxTourneyTeams.xlsx')
+```
+
+```{r Saves and Wins}
+saves %>%
+  filter(Games > 5) %>%
+  ggplot() +
+  geom_point(mapping = aes(x = Saves, y = W, color = PerGame)) +
+  scale_color_gradient(low = "gray", high = "blue") +
+  geom_smooth(mapping = aes(x = Saves, y = W), method = 'lm', se = FALSE, color = "black") +
+   geom_text(mapping = aes(x = 85, y = 10), label = paste("R: ", round(cor(saves$Saves, saves$W), 5))) +
+  labs(x = "Total Saves",
+       y = "Wins",
+       title = "NCAA MLax Saves and Wins",
+       subtitle =  "(At least 5 games played through 4/27/21)",
+       caption = "Graph by: Nate Tran | @domiNATEstats",
+       color = 'Saves per Game'
+       ) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(size = 14, hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(size = 12, hjust = 0.5)
+  ) + 
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  ggsave('ncaasavesandwins.png')
+```
+
+```{r}
+tourney %>%
+  ggplot() +
+  geom_point(mapping = aes(x = PossMarg, y = ExcessShotPct, color = Team, size = AdjOffPct)) +
+  scale_color_manual(values=c("#8B6F4B", "#8B2332", "#07294d", "#003087", "#011e41", "#330072", "tan4", "springgreen4", "#CF102D", "#041E42", "#7BAFD4", "#0C2340", "#CC0033", "#D44500", "#005710", "#F84C1E"), guide = FALSE) +
+  geom_text_repel(mapping = aes(x = PossMarg, y = ExcessShotPct, label = Team)) +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed", alpha=0.5) +
+  geom_vline(xintercept = 0, color = "red", linetype = "dashed", alpha=0.5) +
+  labs(x = "Possession Margin (# of Offensive Poss. - # of Poss. Defense Faced) ",
+       y = "Actual - Expected Shooting %",
+       title = "2021 NCAA MLax Tourney Team Shooting and Possessions",
+       caption = "Data: @laxreference | Graph By: Nate Tran | @domiNATEstats",
+       size = "Adj. Offensive Efficiency") +
+  #uses the black and white ggplot theme
+  theme_bw() +
+  #center title with hjust = 0.5
+  theme(
+    plot.title = element_text(size = 12, hjust = 0.5, face = "bold")
+  ) +
+  #make ticks look nice
+  #if this doesn't work, `install.packages('scales')`
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  ggsave('tourneyshotsposs.png')
+
+```
+
+```{r}
+tourney %>%
+  ggplot() +
+  geom_point(mapping = aes(x = WeightedDepth, y = TopTenUSGPCt, color = Team)) +
+  scale_color_manual(values=c("#8B6F4B", "#8B2332", "#07294d", "#003087", "#011e41", "#330072", "tan4", "springgreen4", "#CF102D", "#041E42", "#7BAFD4", "#0C2340", "#CC0033", "#D44500", "#005710", "#F84C1E"), guide = FALSE) +
+  geom_text_repel(mapping = aes(x = WeightedDepth, y = TopTenUSGPCt, label = Team)) +
+  labs(x = "Weighted Team Depth",
+       y = "Top Ten Most Active Player Usage %",
+       title = "2021 MLax Tourney Team Depth",
+       caption = "Data: @laxreference | Graph By: Nate Tran | @domiNATEstats") +
+  geom_text(mapping = aes(x = 27.5, y = 67.5, label = "Deeper Teams")) +
+  geom_text(mapping = aes(x = 22.75, y = 77, label = "Less Deep Teams")) +
+  #uses the black and white ggplot theme
+  theme_bw() +
+  #center title with hjust = 0.5
+  theme(
+    plot.title = element_text(size = 12, hjust = 0.5, face = "bold")
+  ) +
+  #make ticks look nice
+  #if this doesn't work, `install.packages('scales')`
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 9)) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 9)) +
+  ggsave('mlaxtourneydepth.png')
+
+```
+

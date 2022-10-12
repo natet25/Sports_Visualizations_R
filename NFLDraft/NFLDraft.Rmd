@@ -1,0 +1,51 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(ggrepel)
+bears <- read_excel('bearsdraftpicks.xlsx')
+nfl <- read_excel('2015to2020draft.xlsx')
+```
+
+```{r Pace Picks}
+nfl <- nfl %>%
+  filter(!is.na(CarAV)) %>%
+  mutate(CarAVperYr = CarAV/(2021 - Year))
+
+fit <- lm(CarAVperYr ~ Pick, data = nfl)
+
+nfl$predicted <- predict(fit)
+nfl$residuals <- residuals(fit)
+
+pace <- nfl %>%
+  filter(Tm == 'CHI', Year >= 2015)
+
+```
+
+```{r Pace Picks Graph}
+pace_data <- pace %>%
+  filter(abs(residuals) > 2 | Pick <= 150)
+
+ggplot() +
+  geom_point(data = pace, aes(x = Pick, y = CarAVperYr, size = St), color = 'orange') +
+  geom_point(data = nfl, aes(x = Pick, y = CarAVperYr), alpha = .25, color = 'gray') +
+  geom_smooth(data = nfl, aes(x = Pick, y = CarAVperYr), method = "lm", se = FALSE, color = "gray") +
+  geom_text_repel(data = pace_data, aes(x = Pick, y = CarAVperYr, label = Last), size = 3.5, face = 'bold', max.overlaps = 8) +
+  geom_segment(data = pace, aes(x = Pick, y = CarAVperYr, xend = Pick, yend = predicted), alpha = .75, color = 'navyblue') +
+  labs(x = "Pick Number",
+       y = "Weighted Career Approximate Value per Year",
+       title = "Ryan Pace Chicago Bears Draft Picks",
+       caption = "Data: Pro Football Reference @pfref | Graph By: Nate Tran | @domiNATEstats",
+       size = "Years as Starter") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 14, hjust = 0.5, face = "bold")) +
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10)) + 
+  ggsave('pacepicks.png')
+```
+

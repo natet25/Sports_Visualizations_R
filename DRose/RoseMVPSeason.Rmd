@@ -1,0 +1,49 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(ggrepel)
+library(readxl)
+advanced <- read_excel('nba2010-11advanced.xlsx')
+advanced <- advanced %>%
+  filter(G > 57)
+pergame <- read_excel('2010-11nbapergame.xlsx')
+pergame <- pergame %>%
+  filter(G > 57)
+```
+
+```{r}
+mvpvoting <- advanced %>%
+  filter(Player == "Derrick Rose" | Player == "Dwight Howard" | Player == "LeBron James" | Player == "Kobe Bryant" | Player == "Kevin Durant" | Player == " Dirk Nowitzki" | Player == "Dwyane Wade" | Player == "Manu Ginóbili" | Player == "Amar'e Stoudemire" | Player == "Blake Griffin" | Player == "Rajon Rondo" | Player == "Tony Parker" | Player == "Chris Paul")
+
+
+ggplot() +
+geom_point(data = advanced, mapping = aes(x = WS, y = VORP), alpha = 0.25) + 
+geom_point(data = mvpvoting, mapping = aes(x = WS, y = VORP)) +
+geom_text_repel(data = mvpvoting, mapping = aes(x = WS, y = VORP, label = Player)) +
+geom_hline(yintercept = mean(advanced$VORP), color = 'red', linetype = 'dashed') +
+geom_vline(xintercept = mean(advanced$WS), color = 'red', linetype = 'dashed') +
+geom_text(aes(x = 12, y = mean(advanced$VORP)), label = paste("Average Value over Replacement Player: ", round(mean(advanced$VORP), 2)), vjust = -1, size = 3) +
+geom_text(aes(y = 6, x = mean(advanced$WS)), label = paste("Average Win Shares: ", round(mean(advanced$WS), 2)), vjust = -1, size = 3) +
+  labs(x = "Win Shares",
+       y = "Value over Replacement Player",
+       title = "Win Shares and VORP for the 2010-2011 NBA Season (At Least 58 Games Played)",
+       caption = "Data: Basketball Reference (@bball_ref) | Graph by: Nate Tran | @domiNATEstats",
+       subtitle = "Players that Received MVP Votes Are Highlighted") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 12, hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(size = 12, hjust = 0.5)
+  ) + 
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10)) +
+ ggsave("wsvorp.png")
+```
+
+```{r}
+
+```
+

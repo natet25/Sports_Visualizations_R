@@ -1,0 +1,40 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(ggrepel)
+bigten <- read_excel('bigtenstats2020-21.xlsx')
+bigten <- bigten %>%
+  mutate(mpg = MP / G) %>%
+  filter(mpg > 10)
+```
+
+```{r}
+bigten %>%
+  ggplot(aes(y = BPM, x = WS)) +
+  geom_point(aes(color = School)) +
+  scale_color_manual(values = c("orange", "firebrick3", "black", "gold", "navyblue", "forestgreen", "darkred","red2", "darkorchid", "gray", "mediumblue", "gold3", "red", "firebrick1")) +
+  geom_text_repel(aes(label = Player), size = 2.5, max.overlaps = 13) +
+  theme_minimal() +
+  labs(y = "Box Plus/Minus",
+       x = "Win Shares",
+       title = "Win Shares and Box Plus/Minus (Big Ten 2020-2021)",
+       subtitle = "Players with at least 10 minutes per game",
+       caption = "Data: @collegebb_ref | Graph By: Nate Tran | @domiNATEstats") +
+  theme_bw() +
+  #center title
+  theme(
+    aspect.ratio = 9 / 16,
+    plot.title = element_text(size = 14, hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(size = 12, hjust = 0.5)
+  ) + 
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  ggsave('wsbpmbigten.png')
+```
+
